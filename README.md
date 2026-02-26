@@ -128,4 +128,3 @@ index.html          →     /api/recommend.js
 
 ---
 
-Built with ❤️ using Claude AI
