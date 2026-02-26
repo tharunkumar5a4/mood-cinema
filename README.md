@@ -123,7 +123,5 @@ mood-cinema/
 ---
 
 <div align="center">
-  Built with ❤️ using AI
-  <br><br>
   <a href="https://mood-cinema-five.vercel.app">🎬 Try MoodCinema Now</a>
 </div>
