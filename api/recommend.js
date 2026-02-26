@@ -74,8 +74,46 @@ export default async function handler(req, res) {
     }
   }
 
-  // All models failed
+  // All models failed on first pass — wait 2 seconds and try once more
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  for (const model of models) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer':  'https://mood-cinema-five.vercel.app',
+          'X-Title':       'MoodCinema',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1500,
+          temperature: 0.7,
+        })
+      });
+
+      const rawText = await response.text();
+      let data;
+      try { data = JSON.parse(rawText); } catch(e) { continue; }
+
+      if (response.status === 429 || data?.error?.code === 429) continue;
+      if (!response.ok) continue;
+
+      const text = data?.choices?.[0]?.message?.content || '';
+      if (!text) continue;
+
+      return res.status(200).json({ content: [{ text }] });
+
+    } catch (err) {
+      continue;
+    }
+  }
+
+  // Truly failed after retry
   return res.status(502).json({
-    error: `All AI models are busy right now. Please try again in a moment. (${lastError})`
+    error: 'AI models are busy right now. Please try again in a moment.'
   });
 }
