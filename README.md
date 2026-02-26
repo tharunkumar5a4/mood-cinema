@@ -53,14 +53,7 @@ This opens your browser. Sign up free at vercel.com then confirm.
 ```bash
 vercel
 ```
-Answer the prompts:
-- **Set up and deploy?** → Y
-- **Which scope?** → your username
-- **Link to existing project?** → N
-- **Project name?** → mood-cinema
-- **In which directory is your code?** → ./  (just press Enter)
 
-Vercel will give you a live URL like: `https://mood-cinema-xyz.vercel.app`
 
 ### Step 6 — Add your Anthropic API Key (IMPORTANT)
 Your key must NEVER go in the code. Add it in Vercel dashboard:
