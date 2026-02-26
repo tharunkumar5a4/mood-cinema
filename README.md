@@ -1,18 +1,113 @@
 # 🎬 MoodCinema
 
-> AI-powered emotion-driven movie & series recommender.  
-> Pick a mood → get 6 perfectly matched, highly-rated titles instantly.
+> **AI-powered emotion-driven movie & series recommender**  
+> Tell us how you feel — we'll find the perfect watch for tonight.
+
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-mood--cinema--five.vercel.app-black?style=for-the-badge)](https://mood-cinema-five.vercel.app)
+[![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
+
+</div>
 
 ---
 
-## 🗂 Project Structure
+## 🌐 Live Demo
+
+👉 **[https://mood-cinema-five.vercel.app](https://mood-cinema-five.vercel.app)**
+
+---
+
+## ✨ Features
+
+- 🎭 **9 Preset Moods** — Heartbroken, Hyped, Chill, Funny, Mind-Blown and more
+- ✍️ **Custom Mood Input** — Describe any mood in your own words
+- 🎬 **Movies & Series Toggle** — Switch between films and TV shows
+- 🎚️ **Mood Intensity Slider** — Light, Medium, or Intense recommendations
+- ⏱️ **Time Filter** — Filter by how much time you have
+- ⭐ **IMDb 7.5+ Only** — Only highly rated, critically acclaimed titles
+- 📺 **OTT Platform Badges** — See where to watch (Netflix, Prime, Disney+ etc.)
+- 🎬 **Watchlist** — Save titles for later, persists across sessions
+- 🧠 **Taste Insight** — Learns your viewing pattern during the session
+- ⏳ **Total Watch Time** — Calculates tonight's total viewing time
+- ✨ **Shimmer Skeleton Loading** — Smooth loading experience
+- 📱 **Fully Responsive** — Works on mobile, tablet, and desktop
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vanilla HTML, CSS, JavaScript |
+| Backend | Vercel Serverless Functions (Node.js) |
+| AI | OpenRouter API (Llama 3.3 70B + fallbacks) |
+| Hosting | Vercel (Free Tier) |
+| Version Control | GitHub |
+
+---
+
+## 🔒 Security Architecture
+
+```
+Browser (Public)            Server (Private)
+────────────────            ─────────────────
+index.html          →       /api/recommend.js
+  sends prompt      →         reads OPENROUTER_API_KEY
+  receives results  ←         calls AI API
+                              returns results
+```
+
+- ✅ API keys stored only in Vercel environment variables
+- ✅ Keys never exposed in frontend code
+- ✅ Safe to open source — no secrets in repository
+
+---
+
+## 🚀 How to Deploy Your Own
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/tharunkumar5a4/mood-cinema.git
+cd mood-cinema
+```
+
+### 2. Install Vercel CLI
+```bash
+npm install -g vercel
+```
+
+### 3. Get a free API key
+- Go to [openrouter.ai](https://openrouter.ai)
+- Sign up free → Create API key
+
+### 4. Deploy to Vercel
+```bash
+vercel
+```
+
+### 5. Add environment variable in Vercel dashboard
+```
+OPENROUTER_API_KEY = your_key_here
+```
+
+### 6. Redeploy
+```bash
+vercel --prod
+```
+
+✅ Your own MoodCinema is live!
+
+---
+
+## 📁 Project Structure
 
 ```
 mood-cinema/
 ├── api/
-│   └── recommend.js      ← Secure serverless proxy (Anthropic key lives here)
+│   └── recommend.js      ← Secure serverless proxy
 ├── public/
-│   └── index.html        ← Full frontend app (no keys, safe to publish)
+│   └── index.html        ← Full frontend app
 ├── .gitignore
 ├── package.json
 ├── vercel.json
@@ -21,103 +116,14 @@ mood-cinema/
 
 ---
 
-## 🚀 How to Deploy (Step by Step)
+## 👨‍💻 Author
 
-### Step 1 — Install Node.js
-Download from https://nodejs.org (choose LTS version)  
-After install, open terminal and confirm:
-```bash
-node --version
-npm --version
-```
-
-### Step 2 — Install Vercel CLI
-```bash
-npm install -g vercel
-```
-
-### Step 3 — Clone or download this project
-If you have it as a zip, extract it.  
-Then open terminal inside the `mood-cinema` folder:
-```bash
-cd mood-cinema
-```
-
-### Step 4 — Login to Vercel
-```bash
-vercel login
-```
-This opens your browser. Sign up free at vercel.com then confirm.
-
-### Step 5 — Deploy to Vercel
-```bash
-vercel
-```
-
-
-### Step 6 — Add your Anthropic API Key (IMPORTANT)
-Your key must NEVER go in the code. Add it in Vercel dashboard:
-
-1. Go to https://vercel.com/dashboard
-2. Click your **mood-cinema** project
-3. Click **Settings** tab
-4. Click **Environment Variables** in the left menu
-5. Click **Add New**
-6. Name: `ANTHROPIC_API_KEY`
-7. Value: paste your key (starts with `sk-ant-...`)
-8. Click **Save**
-
-### Step 7 — Redeploy to apply the key
-```bash
-vercel --prod
-```
-
-✅ Your app is now live and secure!
+**Tharunkumar** — [@tharunkumar5a4](https://github.com/tharunkumar5a4)
 
 ---
 
-## 🔒 Why This Architecture Is Safe
-
-```
-Browser (public)          Server (private)
-─────────────────         ─────────────────
-index.html          →     /api/recommend.js
-  sends prompt      →       reads ANTHROPIC_API_KEY
-  receives results  ←       calls Anthropic
-                            returns results
-```
-
-- The API key is **only on Vercel's servers**
-- The browser **never sees the key**
-- GitHub only has the code — **no secrets**
-
----
-
-## 🌟 Features
-
-- 9 preset moods + custom mood text input
-- Movies & Series toggle
-- Mood intensity slider (Light / Medium / Intense)  
-- Time available filter
-- AI-curated recommendations (IMDb 7.5+ only)
-- OTT platform badges (Netflix, Prime, Disney+ etc.)
-- Movie plot popup with trailer link
-- Watchlist with localStorage persistence
-- Taste insight panel
-- Total watch time calculator
-- Shimmer skeleton loading
-- Mood journey journal
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Vanilla HTML/CSS/JS |
-| Backend | Vercel Serverless Functions (Node.js) |
-| AI | Anthropic Claude (claude-sonnet-4) |
-| Hosting | Vercel (free tier) |
-
----
-
+<div align="center">
+  Built with ❤️ using AI
+  <br><br>
+  <a href="https://mood-cinema-five.vercel.app">🎬 Try MoodCinema Now</a>
+</div>
