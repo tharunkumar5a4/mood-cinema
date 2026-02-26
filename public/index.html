@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mood Cinema</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #06070a;
+  --surface: #0d0f14;
+  --surface2: #12151c;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --text: #e2ddd6;
+  --muted: #525866;
+  --muted2: #8a8f9a;
+  --mood: #c9a96e;
+  --mood-rgb: 201,169,110;
+  --mood-glow: rgba(201,169,110,0.12);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+}
+
+.screen { display: none; animation: screenIn 0.5s ease forwards; }
+.screen.active { display: block; }
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== WELCOME ========== */
+#welcome {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.w-glow {
+  position: fixed;
+  top: -100px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 500px;
+  background: radial-gradient(ellipse, rgba(201,169,110,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  animation: glow 6s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.06); }
+}
+
+.perfs {
+  display: flex; gap: 4px;
+  margin-bottom: 4rem;
+  opacity: 0;
+  animation: up 0.8s ease 0.2s forwards;
+}
+.perf { width: 9px; height: 9px; border-radius: 2px; background: var(--muted); opacity: 0.3; }
+
+.logo {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: up 0.8s ease 0.4s forwards;
+}
+.logo em { font-style: italic; color: var(--mood); }
+
+.sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 300;
+  margin-bottom: 5rem;
+  opacity: 0;
+  animation: up 0.8s ease 0.6s forwards;
+}
+
+.cta {
+  background: transparent;
+  border: 1px solid rgba(201,169,110,0.3);
+  color: var(--mood);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 1.1rem 3.5rem;
+  cursor: pointer;
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  animation: up 0.8s ease 0.8s forwards;
+}
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--mood);
+  transform: translateY(101%);
+  transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  z-index: -1;
+}
+.cta:hover { color: var(--bg); }
+.cta:hover::before { transform: translateY(0); }
+
+@keyframes up {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* ========== MOOD SELECT ========== */
+#mood-select {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 4rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 0.6rem;
+}
+.page-title h2 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+.page-title h2 em { font-style: italic; color: var(--mood); }
+.page-title p { font-size: 0.78rem; color: var(--muted2); letter-spacing: 0.08em; margin-top: 0.4rem; }
+
+/* Content type toggle */
+.type-toggle {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 2.5rem;
+}
+.toggle-track {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px;
+  gap: 2px;
+}
+.toggle-opt {
+  padding: 0.55rem 1.8rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--muted2);
+  border: none;
+  background: transparent;
+  font-family: 'Syne', sans-serif;
+}
+.toggle-opt.active {
+  background: var(--mood);
+  color: var(--bg);
+}
+
+/* Filters row */
+.filters-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-box {
+  flex: 1;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.2rem 1.4rem;
+}
+
+.filter-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-label span { color: var(--mood); font-weight: 600; }
+
+/* Intensity Slider */
+.slider-wrap { position: relative; }
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, var(--mood) 0%, var(--mood) var(--val, 60%), rgba(255,255,255,0.08) var(--val, 60%), rgba(255,255,255,0.08) 100%);
+  border-radius: 100px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--mood);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 8px var(--mood-glow);
+  transition: transform 0.2s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+.intensity-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+/* Time filter buttons */
+.time-btns {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.time-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.68rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.05em;
+}
+.time-btn.active, .time-btn:hover {
+  border-color: var(--mood);
+  color: var(--mood);
+  background: rgba(201,169,110,0.07);
+}
+
+/* Mood grid */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.mood-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.8rem 1rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  overflow: hidden;
+}
+.mood-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--c);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+.mood-card:hover {
+  border-color: var(--c);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.5), 0 0 35px rgba(var(--rgb),0.1);
+  background: var(--surface2);
+}
+.mood-card:hover::after { transform: scaleX(1); }
+.mood-emoji {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 0.9rem;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.mood-card:hover .mood-emoji { transform: scale(1.2) rotate(-8deg); }
+.mood-name { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
+.mood-sub { display: block; font-size: 0.68rem; color: var(--muted2); font-weight: 300; }
+
+/* Custom input */
+.custom-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 2rem;
+}
+.custom-box-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.7rem;
+}
+.custom-box p { font-size: 0.78rem; color: var(--muted2); margin-bottom: 1.1rem; font-weight: 300; }
+.custom-box p em { font-family: 'Fraunces', serif; font-style: italic; color: var(--text); }
+.input-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.custom-input {
+  flex: 1;
+  min-width: 180px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.85rem;
+  padding: 0.8rem 1.1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.custom-input:focus { border-color: rgba(201,169,110,0.45); }
+.chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.9rem; }
+.chip {
+  font-size: 0.67rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.chip:hover { border-color: rgba(201,169,110,0.4); color: var(--mood); }
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted2);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.6rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+.btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn.gold { border-color: rgba(201,169,110,0.4); color: var(--mood); }
+.btn.gold:hover { background: var(--mood); color: var(--bg); }
+
+/* ========== EXPERIENCE ========== */
+#experience { min-height: 100vh; }
+
+.exp-top {
+  padding: 2.5rem 1.5rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.exp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.exp-nav-left { display: flex; align-items: center; gap: 0.8rem; }
+
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+.back-btn:hover { color: var(--text); border-color: var(--border2); }
+
+.live-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted2);
+}
+.live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--mood);
+  box-shadow: 0 0 5px var(--mood);
+  animation: blink 2s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.25} }
+
+.exp-nav-right { display: flex; gap: 0.6rem; }
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+.stat-card {
+  flex: 1;
+  min-width: 130px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.2rem;
+}
+.stat-val {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--mood);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.stat-label { font-size: 0.65rem; color: var(--muted2); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Mood summary */
+.mood-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.mood-emoji-big { font-size: 2.8rem; flex-shrink: 0; }
+.mood-text-block { flex: 1; }
+.mood-title-big {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 0.3rem;
+}
+.mood-desc-small { font-size: 0.8rem; color: var(--muted2); font-weight: 300; line-height: 1.5; }
+.mood-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; }
+.mood-tag {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 100px;
+  background: rgba(var(--mood-rgb), 0.08);
+  border: 1px solid rgba(var(--mood-rgb), 0.2);
+  color: var(--mood);
+}
+
+/* Movie list */
+.section-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.section-head {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.section-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.movie-list { display: flex; flex-direction: column; gap: 0.65rem; }
+
+.movie-card {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.2rem 1.4rem;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  animation: cardIn 0.5s ease forwards;
+}
+.movie-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--mood);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+.movie-card:hover {
+  border-color: rgba(255,255,255,0.1);
+  background: var(--surface2);
+  transform: translateX(4px);
+}
+.movie-card:hover::before { transform: scaleY(1); }
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.card-num {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: rgba(255,255,255,0.07);
+  line-height: 1;
+  text-align: right;
+}
+.card-info { min-width: 0; }
+.card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.meta-txt { font-size: 0.68rem; color: var(--muted2); }
+.meta-dot { width: 2px; height: 2px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.why-badge {
+  font-size: 0.64rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+  background: rgba(var(--mood-rgb), 0.08);
+  border: 1px solid rgba(var(--mood-rgb), 0.18);
+  color: var(--mood);
+  white-space: nowrap;
+}
+.card-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+.rating-block { text-align: center; }
+.rating-val {
+  font-family: 'Fraunces', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--mood);
+  line-height: 1;
+}
+.rating-lbl { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.play-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+.movie-card:hover .play-btn {
+  border-color: var(--mood);
+  color: var(--mood);
+  box-shadow: 0 0 10px rgba(var(--mood-rgb),0.25);
+}
+
+/* Taste Insight */
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 1.5rem;
+}
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+.insight-icon { font-size: 1.4rem; }
+.insight-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+.insight-sub { font-size: 0.72rem; color: var(--muted2); }
+.insight-body { font-size: 0.82rem; color: var(--muted2); line-height: 1.7; font-weight: 300; }
+.insight-body strong { color: var(--text); font-weight: 500; }
+.genre-bars { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.2rem; }
+.genre-bar-row { display: flex; align-items: center; gap: 0.8rem; }
+.genre-name { font-size: 0.7rem; color: var(--muted2); width: 80px; flex-shrink: 0; }
+.genre-track { flex: 1; height: 3px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; }
+.genre-fill { height: 100%; background: var(--mood); border-radius: 100px; transition: width 1s ease; }
+.genre-pct { font-size: 0.65rem; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
+
+/* Journal */
+.journal-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+}
+.j-dots { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.j-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  cursor: default;
+  transition: transform 0.3s ease;
+}
+.j-dot.filled { border-color: transparent; }
+.j-dot:hover { transform: scale(1.15); }
+
+/* ========== MODAL ========== */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: #0d0f14;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px;
+  max-width: 520px;
+  width: 100%;
+  padding: 2.2rem;
+  position: relative;
+  transform: translateY(18px) scale(0.97);
+  transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.07);
+  color: var(--muted2);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.modal-close:hover { color: var(--text); border-color: var(--border2); }
+
+.modal-tag {
+  font-size: 0.63rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--mood);
+  margin-bottom: 0.7rem;
+  display: block;
+}
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.9rem;
+  font-weight: 300;
+  line-height: 1.1;
+  margin-bottom: 0.8rem;
+}
+.modal-chips {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+.modal-chip {
+  font-size: 0.68rem;
+  color: var(--muted2);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 0.25rem 0.65rem;
+  border-radius: 100px;
+}
+.modal-chip.gold { color: var(--mood); border-color: rgba(var(--mood-rgb),0.25); background: rgba(var(--mood-rgb),0.06); }
+
+.modal-plot {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(226,221,214,0.7);
+  margin-bottom: 1.2rem;
+  padding: 1.2rem 1.4rem;
+  background: rgba(255,255,255,0.02);
+  border-left: 2px solid var(--mood);
+  border-radius: 0 4px 4px 0;
+}
+
+.modal-why-row {
+  font-size: 0.75rem;
+  color: var(--muted2);
+  margin-bottom: 1.8rem;
+  padding: 0.7rem 1rem;
+  background: rgba(var(--mood-rgb),0.04);
+  border-radius: 3px;
+}
+.modal-why-row b { color: var(--mood); }
+
+.modal-actions { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+.modal-actions .btn { flex: 1; text-align: center; }
+
+/* ========== WATCHLIST DRAWER ========== */
+.wl-fab {
+  position: fixed;
+  bottom: 2rem; right: 2rem;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  z-index: 900;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+}
+.wl-fab:hover {
+  border-color: var(--mood);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 20px rgba(var(--mood-rgb),0.2);
+  transform: scale(1.08);
+}
+.wl-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--mood);
+  color: var(--bg);
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: none;
+  align-items: center; justify-content: center;
+}
+
+.wl-panel {
+  position: fixed; inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.wl-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.wl-drawer {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: min(380px, 100vw);
+  background: #090b0f;
+  border-left: 1px solid rgba(255,255,255,0.07);
+  padding: 2rem 1.6rem;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.wl-panel.open { pointer-events: all; }
+.wl-panel.open .wl-backdrop { opacity: 1; }
+.wl-panel.open .wl-drawer { transform: translateX(0); }
+
+.wl-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.wl-head h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem; font-weight: 300;
+}
+
+.wl-item {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.wl-item:hover { opacity: 0.75; }
+.wl-info { flex: 1; min-width: 0; }
+.wl-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.95rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 0.2rem;
+}
+.wl-meta { font-size: 0.68rem; color: var(--muted2); }
+.wl-del {
+  background: transparent; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 0.9rem; padding: 0.3rem;
+  transition: color 0.3s; flex-shrink: 0;
+}
+.wl-del:hover { color: #e85d75; }
+
+.wl-empty {
+  text-align: center; padding: 3rem 1rem;
+  color: var(--muted2); font-size: 0.82rem;
+}
+.wl-empty span { display: block; font-size: 2rem; margin-bottom: 0.8rem; }
+
+/* Loading */
+.loading-wrap {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.loader {
+  width: 44px; height: 44px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-top-color: var(--mood);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem; font-style: italic;
+  color: var(--muted2);
+}
+
+scrollbar-width: thin;
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
+
+/* ===== SHIMMER SKELETON ===== */
+.shimmer-list { display: flex; flex-direction: column; gap: 0.65rem; }
+.shimmer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.2rem 1.4rem;
+  display: grid;
+  grid-template-columns: 40px 1fr 60px;
+  gap: 1.2rem;
+  align-items: center;
+}
+.shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
+  background-size: 200% 100%;
+  animation: shimmerAnim 1.6s ease infinite;
+  border-radius: 3px;
+}
+@keyframes shimmerAnim {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sh-circle { width: 32px; height: 32px; border-radius: 50%; }
+.sh-line-lg { height: 14px; width: 60%; margin-bottom: 8px; }
+.sh-line-sm { height: 10px; width: 85%; }
+.sh-block   { height: 36px; width: 52px; border-radius: 4px; justify-self: end; }
+
+/* ===== PLATFORM BADGES ===== */
+.platforms-row {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
+}
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.platform-badge svg { flex-shrink: 0; }
+.pb-netflix   { background: rgba(229,9,20,0.1);    border-color: rgba(229,9,20,0.25);    color: #e50914; }
+.pb-prime     { background: rgba(0,168,225,0.1);   border-color: rgba(0,168,225,0.25);   color: #00a8e1; }
+.pb-apple     { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #f5f5f7; }
+.pb-disney    { background: rgba(17,60,219,0.12);  border-color: rgba(17,60,219,0.3);    color: #5b8dee; }
+.pb-hbo       { background: rgba(163,53,238,0.1);  border-color: rgba(163,53,238,0.25);  color: #a335ee; }
+.pb-hulu      { background: rgba(28,231,131,0.1);  border-color: rgba(28,231,131,0.25);  color: #1ce783; }
+.pb-default   { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--muted2); }
+
+/* Modal platforms */
+.modal-platforms { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+.modal-platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div id="welcome" class="screen active">
+  <div class="w-glow"></div>
+  <div class="perfs">
+    <div class="perf"></div><div class="perf"></div><div class="perf"></div>
+    <div class="perf"></div><div class="perf"></div><div class="perf"></div>
+    <div class="perf"></div><div class="perf"></div><div class="perf"></div>
+  </div>
+  <h1 class="logo">Mood<em>Cinema</em></h1>
+  <p class="sub">Cinema that feels like you</p>
+  <button class="cta" onclick="go('mood-select')">Enter the Theatre</button>
+</div>
+
+<!-- MOOD SELECT -->
+<div id="mood-select" class="screen">
+  <div style="max-width:900px; margin:0 auto; padding:3rem 1.5rem 0;">
+    <div class="page-title">
+      <h2>How are you <em>feeling</em>?</h2>
+      <p>AI curates your perfect watch based on your emotional state</p>
+    </div>
+
+    <!-- Content type toggle -->
+    <div class="type-toggle">
+      <div class="toggle-track">
+        <button class="toggle-opt active" id="typeMovie" onclick="setType('movie')">🎬 Movies</button>
+        <button class="toggle-opt" id="typeSeries" onclick="setType('series')">📺 Series</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <div class="filter-box">
+        <div class="filter-label">Mood Intensity <span id="intensityVal">Medium</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="intensitySlider" min="1" max="3" value="2" oninput="updateIntensity(this.value)">
+        </div>
+        <div class="intensity-labels">
+          <span>Light</span><span>Medium</span><span>Intense</span>
+        </div>
+      </div>
+      <div class="filter-box">
+        <div class="filter-label">Time Available <span id="timeVal">Any</span></div>
+        <div class="time-btns">
+          <button class="time-btn active" onclick="setTime(this,'any')">Any</button>
+          <button class="time-btn" onclick="setTime(this,'90')">Under 90m</button>
+          <button class="time-btn" onclick="setTime(this,'120')">Under 2h</button>
+          <button class="time-btn" onclick="setTime(this,'120+')">2h+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mood Grid -->
+    <div class="mood-grid">
+      <div class="mood-card" style="--c:#e85d75;--rgb:232,93,117" onclick="pickMood('😢','Heartbroken','#e85d75','232,93,117','Films that understand heartbreak, loss, and longing.')">
+        <span class="mood-emoji">😢</span><span class="mood-name">Heartbroken</span><span class="mood-sub">Let it out</span>
+      </div>
+      <div class="mood-card" style="--c:#ff7c3a;--rgb:255,124,58" onclick="pickMood('🔥','Hyped & Alive','#ff7c3a','255,124,58','High-energy content that matches your fire and adrenaline.')">
+        <span class="mood-emoji">🔥</span><span class="mood-name">Hyped & Alive</span><span class="mood-sub">Feel the energy</span>
+      </div>
+      <div class="mood-card" style="--c:#4ecdc4;--rgb:78,205,196" onclick="pickMood('😌','Chill & Peaceful','#4ecdc4','78,205,196','Slow, beautiful content perfect for a quiet and calm evening.')">
+        <span class="mood-emoji">😌</span><span class="mood-name">Chill & Peaceful</span><span class="mood-sub">Slow down</span>
+      </div>
+      <div class="mood-card" style="--c:#ffe566;--rgb:255,229,102" onclick="pickMood('😂','Need to Laugh','#ffe566','255,229,102','Genuinely funny content that will have you laughing out loud.')">
+        <span class="mood-emoji">😂</span><span class="mood-name">Need to Laugh</span><span class="mood-sub">Comedy fix</span>
+      </div>
+      <div class="mood-card" style="--c:#a78bfa;--rgb:167,139,250" onclick="pickMood('🤯','Mind Blown','#a78bfa','167,139,250','Reality-bending content that challenges your mind and perception.')">
+        <span class="mood-emoji">🤯</span><span class="mood-name">Mind Blown</span><span class="mood-sub">Bend reality</span>
+      </div>
+      <div class="mood-card" style="--c:#6bb5ff;--rgb:107,181,255" onclick="pickMood('😴','Can\'t Sleep','#6bb5ff','107,181,255','Gentle, soothing content with a soft pace to ease your mind.')">
+        <span class="mood-emoji">😴</span><span class="mood-name">Can't Sleep</span><span class="mood-sub">Wind down</span>
+      </div>
+      <div class="mood-card" style="--c:#ff6b6b;--rgb:255,107,107" onclick="pickMood('😤','Stressed Out','#ff6b6b','255,107,107','Cathartic content that channels frustration into something powerful.')">
+        <span class="mood-emoji">😤</span><span class="mood-name">Stressed Out</span><span class="mood-sub">Release it</span>
+      </div>
+      <div class="mood-card" style="--c:#f9a8d4;--rgb:249,168,212" onclick="pickMood('🥺','Need to Feel','#f9a8d4','249,168,212','Deeply emotional content that opens your heart and moves you.')">
+        <span class="mood-emoji">🥺</span><span class="mood-name">Need to Feel</span><span class="mood-sub">Touch your heart</span>
+      </div>
+      <div class="mood-card" style="--c:#34d399;--rgb:52,211,153" onclick="pickMood('🌟','Feeling Lucky','#34d399','52,211,153','Surprise me with something extraordinary and critically acclaimed.')">
+        <span class="mood-emoji">🌟</span><span class="mood-name">Feeling Lucky</span><span class="mood-sub">Surprise me</span>
+      </div>
+    </div>
+
+    <!-- Custom Input -->
+    <div class="custom-box">
+      <div class="custom-box-label">Describe your own mood mix</div>
+      <p>Type anything — <em>"romantic mystery"</em>, <em>"dark comedy thriller"</em>, <em>"feel good after a rough day"</em>…</p>
+      <div class="input-row">
+        <input class="custom-input" id="customInput" type="text" placeholder="e.g. romantic and mysterious…" onkeydown="if(event.key==='Enter') submitCustom()">
+        <button class="btn gold" onclick="submitCustom()">Find →</button>
+      </div>
+      <div class="chips">
+        <span class="chip" onclick="fillChip('romantic mystery')">romantic mystery</span>
+        <span class="chip" onclick="fillChip('dark comedy')">dark comedy</span>
+        <span class="chip" onclick="fillChip('feel good after breakup')">feel good after breakup</span>
+        <span class="chip" onclick="fillChip('epic adventure sci-fi')">epic adventure sci-fi</span>
+        <span class="chip" onclick="fillChip('nostalgic 90s vibes')">nostalgic 90s vibes</span>
+        <span class="chip" onclick="fillChip('psychological horror thriller')">psychological horror thriller</span>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding-bottom:3rem;">
+      <button class="btn" onclick="go('welcome')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPERIENCE -->
+<div id="experience" class="screen">
+  <div class="exp-top">
+    <div class="exp-nav">
+      <div class="exp-nav-left">
+        <button class="back-btn" onclick="go('mood-select')">← Change Mood</button>
+        <div class="live-pill">
+          <div class="live-dot"></div>
+          <span id="livePillText">AI Curating</span>
+        </div>
+      </div>
+      <div class="exp-nav-right">
+        <button class="btn" onclick="openWatchlist()">🎬 Watchlist</button>
+        <button class="btn gold" onclick="refreshRecs()">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="stats-bar" id="statsBar" style="display:none">
+      <div class="stat-card">
+        <div class="stat-val" id="statMoods">0</div>
+        <div class="stat-label">Moods Explored</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statWatchlist">0</div>
+        <div class="stat-label">In Watchlist</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statType">—</div>
+        <div class="stat-label">Content Type</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statIntensity">—</div>
+        <div class="stat-label">Mood Intensity</div>
+      </div>
+      <div class="stat-card" id="statWatchTimeCard" style="display:none">
+        <div class="stat-val" id="statWatchTime">—</div>
+        <div class="stat-label">Tonight's Watch Time</div>
+      </div>
+    </div>
+
+    <!-- Mood summary -->
+    <div class="mood-summary" id="moodSummary">
+      <div class="mood-emoji-big" id="summaryEmoji">🎬</div>
+      <div class="mood-text-block">
+        <div class="mood-title-big" id="summaryTitle">Tonight's Cinema</div>
+        <div class="mood-desc-small" id="summaryDesc">Curated for how you feel right now</div>
+        <div class="mood-tags" id="summaryTags"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading / Results -->
+  <div id="resultsArea"></div>
+
+  <!-- Taste Insight -->
+  <div class="section-wrap" id="insightWrap" style="display:none">
+    <div class="section-head">Taste Insight</div>
+    <div class="insight-card">
+      <div class="insight-header">
+        <div class="insight-icon">🧠</div>
+        <div>
+          <div class="insight-title">Your Viewing Pattern</div>
+          <div class="insight-sub">Based on your mood history this session</div>
+        </div>
+      </div>
+      <div class="insight-body" id="insightText"></div>
+      <div class="genre-bars" id="genreBars"></div>
+    </div>
+  </div>
+
+  <!-- Journal -->
+  <div class="journal-wrap">
+    <div class="section-head">Mood Journey</div>
+    <div class="j-dots" id="journalDots"></div>
+  </div>
+</div>
+
+<!-- MOVIE MODAL -->
+<div class="overlay" id="movieOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="modal-tag" id="modalTag"></span>
+    <h3 class="modal-title" id="modalTitle"></h3>
+    <div class="modal-chips" id="modalChips"></div>
+    <div class="modal-plot" id="modalPlot"></div>
+    <div class="modal-why-row">🎯 Why this fits: <b id="modalWhy"></b></div>
+    <div class="modal-actions">
+      <button class="btn gold" id="wlToggleBtn" onclick="toggleWatchlist()">+ Watchlist</button>
+      <button class="btn" onclick="openTrailer()">▶ Watch Trailer</button>
+    </div>
+  </div>
+</div>
+
+<!-- WATCHLIST FAB -->
+<button class="wl-fab" onclick="openWatchlist()">
+  🎬
+  <span class="wl-badge" id="wlBadge">0</span>
+</button>
+
+<!-- WATCHLIST PANEL -->
+<div class="wl-panel" id="wlPanel">
+  <div class="wl-backdrop" onclick="closeWatchlist()"></div>
+  <div class="wl-drawer">
+    <div class="wl-head">
+      <h3>My Watchlist</h3>
+      <button class="btn" onclick="closeWatchlist()">✕ Close</button>
+    </div>
+    <div id="wlItems"></div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let currentMood = null;
+let contentType = 'movie';
+let intensity = 2;
+let timeLimit = 'any';
+let journal = [];
+let watchlist = [];
+let currentModal = null;
+
+try { watchlist = JSON.parse(localStorage.getItem('mc_watchlist') || '[]'); } catch(e) { watchlist = []; }
+
+const intensityLabels = { 1: 'Light', 2: 'Medium', 3: 'Intense' };
+const intensityDescs = { 1: 'soft, subtle, gentle', 2: 'balanced, moderately emotional', 3: 'deeply intense, emotionally heavy, powerful' };
+
+// ===== NAVIGATION =====
+
+// ===== CONTENT TYPE =====
+function setType(type) {
+  contentType = type;
+  document.getElementById('typeMovie').classList.toggle('active', type === 'movie');
+  document.getElementById('typeSeries').classList.toggle('active', type === 'series');
+}
+
+// ===== INTENSITY =====
+function updateIntensity(val) {
+  intensity = parseInt(val);
+  document.getElementById('intensityVal').textContent = intensityLabels[intensity];
+  const pct = ((val - 1) / 2 * 100) + '%';
+  document.getElementById('intensitySlider').style.setProperty('--val', pct);
+}
+
+// ===== TIME FILTER =====
+function setTime(btn, val) {
+  timeLimit = val;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('timeVal').textContent = val === 'any' ? 'Any' : val === '120+' ? '2h+' : `Under ${val}m`;
+}
+
+// ===== PICK MOOD =====
+function pickMood(emoji, name, color, rgb, desc) {
+  currentMood = { emoji, name, color, rgb, desc };
+  applyMoodColor(color, rgb);
+  journal.push({ emoji, color, rgb, name });
+  go('experience');
+  updateExpHeader();
+  fetchRecs();
+}
+
+function submitCustom() {
+  const input = document.getElementById('customInput');
+  const val = input.value.trim();
+  if (!val) return;
+  const color = '#c9a96e', rgb = '201,169,110';
+  currentMood = { emoji: '🎬', name: val, color, rgb, desc: `User wants content matching: "${val}"` };
+  applyMoodColor(color, rgb);
+  journal.push({ emoji: '✍️', color, rgb, name: val });
+  go('experience');
+  updateExpHeader();
+  fetchRecs();
+  input.value = '';
+}
+
+function fillChip(text) {
+  const el = document.getElementById('customInput');
+  if (el) { el.value = text; el.focus(); }
+}
+
+function applyMoodColor(color, rgb) {
+  document.documentElement.style.setProperty('--mood', color);
+  document.documentElement.style.setProperty('--mood-rgb', rgb);
+  document.documentElement.style.setProperty('--mood-glow', `rgba(${rgb},0.12)`);
+}
+
+function updateExpHeader() {
+  if (!currentMood) return;
+  const m = currentMood;
+  const pillEl = document.getElementById('livePillText');
+  const emoji = document.getElementById('summaryEmoji');
+  const title = document.getElementById('summaryTitle');
+  const desc = document.getElementById('summaryDesc');
+  const tags = document.getElementById('summaryTags');
+  if (pillEl) pillEl.textContent = `${m.emoji} ${m.name}`;
+  if (emoji) emoji.textContent = m.emoji;
+  if (title) title.textContent = `${m.name} — Tonight's Cinema`;
+  if (desc) desc.textContent = m.desc;
+  if (tags) {
+    const tagList = [
+      contentType === 'movie' ? '🎬 Movies' : '📺 Series',
+      `${intensityLabels[intensity]} Intensity`,
+      timeLimit === 'any' ? 'Any Duration' : timeLimit === '120+' ? '2h+' : `Under ${timeLimit}m`
+    ];
+    tags.innerHTML = tagList.map(t => `<span class="mood-tag">${t}</span>`).join('');
+  }
+
+  // Stats
+  const statsBar = document.getElementById('statsBar');
+  if (statsBar) statsBar.style.display = 'flex';
+  updateStats();
+}
+
+function updateStats() {
+  const sm = document.getElementById('statMoods');
+  const sw = document.getElementById('statWatchlist');
+  const st = document.getElementById('statType');
+  const si = document.getElementById('statIntensity');
+  if (sm) sm.textContent = journal.length;
+  if (sw) sw.textContent = watchlist.length;
+  if (st) st.textContent = contentType === 'movie' ? 'Movie' : 'Series';
+  if (si) si.textContent = intensityLabels[intensity];
+}
+
+function refreshRecs() {
+  if (!currentMood) return;
+  fetchRecs();
+}
+
+// ===== FETCH RECOMMENDATIONS =====
+async function fetchRecs() {
+  const area = document.getElementById('resultsArea');
+  if (!area) return;
+
+  // Shimmer skeleton — 6 placeholder cards
+  area.innerHTML = `
+    <div class="section-wrap">
+      <div class="section-head">Curating For You</div>
+      <div class="shimmer-list">
+        ${Array(6).fill(0).map((_, i) => `
+        <div class="shimmer-card" style="opacity:${1 - i * 0.1}">
+          <div class="shimmer sh-circle"></div>
+          <div>
+            <div class="shimmer sh-line-lg"></div>
+            <div class="shimmer sh-line-sm"></div>
+          </div>
+          <div class="shimmer sh-block"></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  const m = currentMood;
+  const timeNote = timeLimit === 'any' ? 'no time restriction' :
+    timeLimit === '120+' ? 'prefer longer content over 2 hours' :
+    `prefer content under ${timeLimit} minutes`;
+
+  const prompt = `
+You are MoodCinema, an elite AI curator specializing in emotionally intelligent film and television recommendations.
+
+USER CONTEXT:
+Content Type: "${contentType}"
+User Mood: "${m.name}"
+Mood Description: ${m.desc}
+Mood Intensity: ${intensityLabels[intensity]} (${intensityDescs[intensity]})
+Time Preference: ${timeNote}
+
+CURATION GOAL:
+Recommend exactly 6 highly acclaimed ${contentType === 'series' ? 'web series or TV shows' : 'movies'} that best match the user's emotional state.
+
+STRICT QUALITY REQUIREMENTS:
+- IMDb rating MUST be 7.5 or higher
+- Titles must be real and widely recognized
+- Avoid obscure or hard-to-verify content
+- Ensure strong emotional alignment
+- Provide variety in year and genre
+- Keep all metadata realistic
+
+STREAMING AVAILABILITY:
+Include the most likely major streaming platforms where the title is available globally.
+Use ONLY these exact platform names:
+- Netflix
+- Prime Video
+- Apple TV+
+- Disney+
+- HBO Max
+- Hulu
+If uncertain, use the most widely known platform. Include 1-3 platforms max.
+
+CONTENT-SPECIFIC RULES:
+IF Content Type is "movie":
+- duration = full movie runtime (example: "2h 15m")
+- seasons MUST be null
+IF Content Type is "series":
+- duration = average episode length (example: "45m/ep")
+- seasons MUST be the real number of seasons
+
+WRITING RULES:
+- "why" max 6 words
+- "plot" max 20 words, spoiler-free
+
+OUTPUT FORMAT (STRICT JSON ONLY — no markdown, no text outside JSON):
+[
+  {
+    "title": "Title Name",
+    "year": 2019,
+    "genre": "Drama / Thriller",
+    "rating": 8.6,
+    "duration": "2h 10m",
+    "why": "Short emotional fit reason",
+    "plot": "One sentence spoiler-free summary",
+    "seasons": null,
+    "platforms": ["Netflix", "Prime Video"]
+  }
+]
+
+Return EXACTLY 6 items.
+`
+
+  try {
+    // ── Call our secure Vercel proxy (not Anthropic directly) ──
+    // The API key is stored safely on the server, never in this file
+    const res = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+
+    // ── Defensive validation ──────────────────────────────────────
+    let movies;
+    try {
+      movies = JSON.parse(clean);
+    } catch (parseErr) {
+      throw new Error('AI returned invalid JSON — retrying may help.');
+    }
+
+    if (!Array.isArray(movies)) {
+      throw new Error('AI response was not a list — retrying may help.');
+    }
+
+    if (movies.length < 4) {
+      throw new Error(`AI only returned ${movies.length} titles — expected 6.`);
+    }
+
+    // Trim to 6 if AI over-returned
+    const validated = movies.slice(0, 6).filter(m => {
+      if (!m.title || !m.year || !m.rating) return false;
+      if (typeof m.rating !== 'number' || m.rating < 1 || m.rating > 10) return false;
+      return true;
+    });
+
+    if (validated.length < 4) {
+      throw new Error('Too many titles failed validation — please refresh.');
+    }
+
+    // Normalise platforms & sort consistently
+    validated.forEach(m => {
+      m.platforms = sortPlatforms(
+        Array.isArray(m.platforms) ? m.platforms.filter(Boolean) : []
+      );
+      m.seasons = m.seasons ?? null;
+    });
+
+    renderResults(validated);
+    updateTotalWatchTime(validated);
+    updateTasteInsight();
+  } catch(e) {
+    const errMsg = e.message || 'Unexpected error. Please try again.';
+    area.innerHTML = `
+      <div class="loading-wrap">
+        <div style="font-size:2rem;margin-bottom:1rem;">⚠️</div>
+        <p style="color:var(--muted2);font-size:0.85rem;margin-bottom:0.5rem;font-weight:500;">Something went wrong</p>
+        <p style="color:var(--muted);font-size:0.75rem;margin-bottom:1.5rem;font-style:italic;">${errMsg}</p>
+        <button class="btn gold" onclick="refreshRecs()">↺ Try Again</button>
+      </div>`;
+  }
+}
+
+// ===== PLATFORM HELPERS =====
+const platformPriority = ['Netflix', 'Prime Video', 'Disney+', 'Apple TV+', 'HBO Max', 'Hulu'];
+
+function sortPlatforms(list) {
+  return [...list].sort(
+    (a, b) => {
+      const ai = platformPriority.indexOf(a);
+      const bi = platformPriority.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    }
+  );
+}
+
+// ===== TOTAL WATCH TIME =====
+function updateTotalWatchTime(movies) {
+  let totalMins = 0;
+  movies.forEach(m => {
+    const dur = m.duration || '';
+    const hMatch = dur.match(/(\d+)h/);
+    const mMatch = dur.match(/(\d+)m/);
+    const h = hMatch ? parseInt(hMatch[1]) : 0;
+    const min = mMatch ? parseInt(mMatch[1]) : 0;
+    totalMins += h * 60 + min;
+  });
+  if (totalMins === 0) return;
+  const hrs = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const label = hrs > 0 ? `${hrs}h ${mins > 0 ? mins + 'm' : ''}` : `${mins}m`;
+  const el = document.getElementById('statWatchTime');
+  const wrap = document.getElementById('statWatchTimeCard');
+  if (el) el.textContent = label.trim();
+  if (wrap) wrap.style.display = 'block';
+}
+const platformConfig = {
+  'Netflix':      { cls: 'pb-netflix',  icon: '▶', label: 'Netflix' },
+  'Prime Video':  { cls: 'pb-prime',   icon: '▶', label: 'Prime' },
+  'Apple TV+':    { cls: 'pb-apple',   icon: '', label: 'Apple TV+' },
+  'Disney+':      { cls: 'pb-disney',  icon: '✦', label: 'Disney+' },
+  'HBO Max':      { cls: 'pb-hbo',     icon: '◈', label: 'HBO Max' },
+  'Hulu':         { cls: 'pb-hulu',    icon: '▸', label: 'Hulu' },
+};
+
+function makePlatformBadges(platforms, size = 'small') {
+  if (!platforms || !platforms.length) return '';
+  return platforms.map(p => {
+    const cfg = platformConfig[p] || { cls: 'pb-default', icon: '◉', label: p };
+    const baseClass = size === 'modal' ? 'modal-platform-badge ' : 'platform-badge ';
+    // Apply same color classes
+    const colorClass = cfg.cls.replace('pb-', size === 'modal' ? 'pb-' : 'pb-');
+    return `<span class="${baseClass}${cfg.cls}">${cfg.icon} ${cfg.label}</span>`;
+  }).join('');
+}
+
+// ===== RENDER RESULTS =====
+function renderResults(movies) {
+  const area = document.getElementById('resultsArea');
+  if (!area) return;
+
+  area.innerHTML = `
+    <div class="section-wrap">
+      <div class="section-head">Curated For You</div>
+      <div class="movie-list" id="movieList"></div>
+    </div>`;
+
+  const list = document.getElementById('movieList');
+  movies.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'movie-card';
+    card.style.animationDelay = `${i * 0.07}s`;
+    card.addEventListener('click', () => openModal(m));
+    card.innerHTML = `
+      <div class="card-num">0${i+1}</div>
+      <div class="card-info">
+        <div class="card-title">${m.title}</div>
+        <div class="card-meta">
+          <span class="meta-txt">${m.year}</span>
+          <div class="meta-dot"></div>
+          <span class="meta-txt">${m.genre}</span>
+          <div class="meta-dot"></div>
+          <span class="meta-txt">${m.duration}</span>
+          ${m.seasons ? `<div class="meta-dot"></div><span class="meta-txt">📺 ${m.seasons} Season${m.seasons > 1 ? 's' : ''}</span>` : ''}
+          <span class="why-badge">${m.why}</span>
+        </div>
+        ${m.platforms && m.platforms.length ? `<div class="platforms-row">${makePlatformBadges(m.platforms)}</div>` : ''}
+      </div>
+      <div class="card-right">
+        <div class="rating-block">
+          <div class="rating-val">${m.rating}</div>
+          <div class="rating-lbl">IMDb</div>
+        </div>
+        <div class="play-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <polygon points="10,8 17,12 10,16" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+// ===== TASTE INSIGHT =====
+function updateTasteInsight() {
+  if (journal.length < 2) return;
+  const wrap = document.getElementById('insightWrap');
+  const text = document.getElementById('insightText');
+  const bars = document.getElementById('genreBars');
+  if (!wrap || !text || !bars) return;
+
+  wrap.style.display = 'block';
+
+  const moodNames = journal.map(j => j.name);
+  const unique = [...new Set(moodNames)];
+
+  let insight = '';
+  if (moodNames.filter(n => n === 'Heartbroken' || n === 'Need to Feel').length >= 2) {
+    insight = 'You gravitate toward <strong>emotionally rich, dramatic</strong> content. You appreciate films that explore the full depth of human experience.';
+  } else if (moodNames.filter(n => n === 'Mind Blown' || n === 'Hyped & Alive').length >= 2) {
+    insight = 'You love <strong>high-concept, intense</strong> storytelling. Your taste skews toward bold, genre-defining content that challenges and excites.';
+  } else if (moodNames.filter(n => n === 'Chill & Peaceful' || n === "Can't Sleep").length >= 2) {
+    insight = 'You prefer <strong>quiet, contemplative</strong> cinema. Atmosphere and mood matter more to you than plot twists or action.';
+  } else {
+    insight = `You have a <strong>diverse, eclectic taste</strong> — exploring ${unique.length} different moods. You enjoy content across the full emotional spectrum.`;
+  }
+  text.innerHTML = insight;
+
+  // Genre bar data based on mood history
+  const genres = [
+    { name: 'Drama', pct: Math.min(95, 30 + journal.filter(j => ['Heartbroken','Need to Feel','Stressed Out'].includes(j.name)).length * 15) },
+    { name: 'Thriller', pct: Math.min(90, 20 + journal.filter(j => ['Mind Blown','Hyped & Alive'].includes(j.name)).length * 18) },
+    { name: 'Comedy', pct: Math.min(85, 15 + journal.filter(j => j.name === 'Need to Laugh').length * 25) },
+    { name: 'Sci-Fi', pct: Math.min(80, 10 + journal.filter(j => j.name === 'Mind Blown').length * 20) },
+  ];
+
+  bars.innerHTML = genres.map(g => `
+    <div class="genre-bar-row">
+      <div class="genre-name">${g.name}</div>
+      <div class="genre-track"><div class="genre-fill" style="width:${g.pct}%"></div></div>
+      <div class="genre-pct">${g.pct}%</div>
+    </div>`).join('');
+}
+
+// ===== JOURNAL =====
+function renderJournal() {
+  const dots = document.getElementById('journalDots');
+  if (!dots) return;
+  dots.innerHTML = '';
+  journal.forEach(j => {
+    const d = document.createElement('div');
+    d.className = 'j-dot filled';
+    d.title = j.name;
+    d.style.background = j.color + '18';
+    d.style.borderColor = j.color + '55';
+    d.textContent = j.emoji;
+    dots.appendChild(d);
+  });
+  for (let i = 0; i < Math.max(0, 14 - journal.length); i++) {
+    const d = document.createElement('div');
+    d.className = 'j-dot';
+    dots.appendChild(d);
+  }
+}
+
+// Watch journal update after go()
+// go() — single definition, renders journal on experience screen
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'experience') setTimeout(renderJournal, 50);
+}
+
+// ===== MODAL =====
+function openModal(m) {
+  currentModal = m;
+  const overlay = document.getElementById('movieOverlay');
+  const tag = document.getElementById('modalTag');
+  const title = document.getElementById('modalTitle');
+  const chips = document.getElementById('modalChips');
+  const plot = document.getElementById('modalPlot');
+  const why = document.getElementById('modalWhy');
+  if (!overlay || !tag || !title || !chips || !plot || !why) return;
+
+  tag.textContent = currentMood ? `${currentMood.emoji} ${currentMood.name}` : 'Curated Pick';
+  title.textContent = m.title;
+  chips.innerHTML = `
+    <span class="modal-chip">${m.year}</span>
+    <span class="modal-chip">${m.genre}</span>
+    <span class="modal-chip">${m.duration}</span>
+    <span class="modal-chip gold">⭐ ${m.rating} IMDb</span>
+    <span class="modal-chip">${contentType === 'series' ? '📺 Series' : '🎬 Movie'}</span>
+    ${m.seasons ? `<span class="modal-chip">📅 ${m.seasons} Season${m.seasons > 1 ? 's' : ''}</span>` : ''}
+  `;
+  plot.textContent = m.plot || 'A compelling story worth experiencing.';
+  why.textContent = m.why;
+
+  // Platform badges in modal
+  let platEl = document.getElementById('modalPlatforms');
+  if (!platEl) {
+    platEl = document.createElement('div');
+    platEl.id = 'modalPlatforms';
+    platEl.className = 'modal-platforms';
+    plot.parentNode.insertBefore(platEl, plot);
+  }
+  platEl.innerHTML = m.platforms && m.platforms.length
+    ? `<div style="font-size:0.63rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;width:100%;">Available on</div>${makePlatformBadges(m.platforms, 'modal')}`
+    : '';
+
+  updateWlBtn();
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  const overlay = document.getElementById('movieOverlay');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('movieOverlay')) closeModal();
+}
+
+function openTrailer() {
+  if (!currentModal) return;
+  const q = encodeURIComponent(`${currentModal.title} ${currentModal.year} official trailer`);
+  window.open(`https://www.youtube.com/results?search_query=${q}`, '_blank');
+}
+
+// ===== WATCHLIST =====
+function updateWlBtn() {
+  const btn = document.getElementById('wlToggleBtn');
+  if (!btn || !currentModal) return;
+  const inList = watchlist.some(w => w.title === currentModal.title && w.year === currentModal.year);
+  btn.textContent = inList ? '✓ In Watchlist' : '+ Watchlist';
+  btn.style.opacity = inList ? '0.6' : '1';
+}
+
+function toggleWatchlist() {
+  if (!currentModal) return;
+  const idx = watchlist.findIndex(w => w.title === currentModal.title && w.year === currentModal.year);
+  if (idx === -1) watchlist.push(currentModal);
+  else watchlist.splice(idx, 1);
+  try { localStorage.setItem('mc_watchlist', JSON.stringify(watchlist)); } catch(e) {}
+  updateWlBtn();
+  updateWlBadge();
+  updateStats();
+  renderWlItems();
+}
+
+function updateWlBadge() {
+  const badge = document.getElementById('wlBadge');
+  if (!badge) return;
+  badge.textContent = watchlist.length;
+  badge.style.display = watchlist.length > 0 ? 'flex' : 'none';
+}
+
+function openWatchlist() {
+  renderWlItems();
+  const panel = document.getElementById('wlPanel');
+  if (panel) panel.classList.add('open');
+}
+
+function closeWatchlist() {
+  const panel = document.getElementById('wlPanel');
+  if (panel) panel.classList.remove('open');
+}
+
+function removeFromWl(title, year) {
+  watchlist = watchlist.filter(w => !(w.title === title && w.year === year));
+  try { localStorage.setItem('mc_watchlist', JSON.stringify(watchlist)); } catch(e) {}
+  updateWlBadge();
+  updateStats();
+  renderWlItems();
+}
+
+function renderWlItems() {
+  const container = document.getElementById('wlItems');
+  if (!container) return;
+  if (watchlist.length === 0) {
+    container.innerHTML = `<div class="wl-empty"><span>🎬</span>Your watchlist is empty.<br>Click any title to add it.</div>`;
+    return;
+  }
+  container.innerHTML = '';
+  watchlist.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'wl-item';
+    item.innerHTML = `
+      <div class="wl-info">
+        <div class="wl-title">${m.title}</div>
+        <div class="wl-meta">${m.year} · ${m.genre} · ⭐ ${m.rating}${m.seasons ? ` · 📺 ${m.seasons} Season${m.seasons > 1 ? 's' : ''}` : ''}</div>
+      </div>
+      <button class="wl-del" onclick="event.stopPropagation(); removeFromWl('${m.title.replace(/'/g,"\\'")}', ${m.year})">✕</button>`;
+    item.querySelector('.wl-info').addEventListener('click', () => {
+      closeWatchlist();
+      openModal(m);
+    });
+    container.appendChild(item);
+  });
+}
+
+// ===== INIT =====
+function init() {
+  updateWlBadge();
+  updateIntensity(2);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
