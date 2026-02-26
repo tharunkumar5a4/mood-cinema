@@ -1,34 +1,30 @@
-// api/recommend.js
-// ─────────────────────────────────────────────
-// Vercel Serverless Function — Anthropic Proxy
-// Your API key lives here (in Vercel env vars)
-// The frontend NEVER sees the key
-// ─────────────────────────────────────────────
-
 export default async function handler(req, res) {
 
-  // ── Only allow POST requests ──────────────────
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  // Allow CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // ── Read the prompt sent from the frontend ────
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
   const { prompt } = req.body;
-
   if (!prompt || typeof prompt !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid prompt' });
+    return res.status(400).json({ error: 'Missing prompt' });
   }
 
-  // ── Call Anthropic using the secret key ───────
-  // process.env.ANTHROPIC_API_KEY is set in Vercel dashboard
-  // It is NEVER sent to the browser
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API key not configured on server' });
+  }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type':         'application/json',
-        'x-api-key':            process.env.ANTHROPIC_API_KEY,
-        'anthropic-version':    '2023-06-01',
+        'Content-Type':       'application/json',
+        'x-api-key':          apiKey,
+        'anthropic-version':  '2023-06-01',
       },
       body: JSON.stringify({
         model:      'claude-sonnet-4-20250514',
@@ -47,7 +43,7 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
 
   } catch (err) {
-    console.error('Server error:', err);
-    return res.status(500).json({ error: 'Internal server error.' });
+    console.error('Server error:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 }
