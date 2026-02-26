@@ -1,6 +1,5 @@
 export default async function handler(req, res) {
 
-  // Allow CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,40 +18,51 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 1200,
-          }
-        })
-      }
-    );
+    // Use gemini-1.5-flash — most reliable free model
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    // Log full response for debugging
+    const rawText = await response.text();
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error('Gemini error:', errText);
-      return res.status(502).json({ error: 'AI service error. Please try again.' });
+      console.error('Gemini HTTP error:', response.status, rawText);
+      return res.status(502).json({
+        error: `Gemini error ${response.status}: ${rawText.slice(0, 200)}`
+      });
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch(e) {
+      console.error('Failed to parse Gemini response:', rawText);
+      return res.status(502).json({ error: 'Invalid JSON from Gemini' });
+    }
 
-    // Extract text from Gemini response format
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     if (!text) {
-      return res.status(502).json({ error: 'Empty response from AI.' });
+      console.error('Empty Gemini response:', JSON.stringify(data));
+      return res.status(502).json({ error: 'Empty response from Gemini — try again.' });
     }
 
-    // Return in same shape frontend expects
-    return res.status(200).json({
-      content: [{ text }]
-    });
+    return res.status(200).json({ content: [{ text }] });
 
   } catch (err) {
     console.error('Server error:', err.message);
